@@ -1,40 +1,24 @@
 <?php
-    require 'vendor/autoload.php';
+
+use Elasticsearch\ClientBuilder;
+
+require 'vendor/autoload.php';
     $hosts = [
         'http://bz-elastic.westeurope.azurecontainer.io:9200'
     ];
-    $client = \Elasticsearch\ClientBuilder::create()
+    $client = ClientBuilder::create()
         ->setHosts($hosts)
         ->build();
 
-    function deleteIndex() {
-        $delParams = [
-            'index' => 'test'
-        ];
-        $c = $GLOBALS['client'];
-        $response = $c->indices()->delete($delParams);
-        echo $response;
-    }
-
-    function addDocuments() {
-        $params1 = [
+    function addDocument($data){
+        $entry = [
             'index' => 'test',
-            'id'    => '1',
             'type'  => 'test_type',
-            'body'  => ['name' => 'John', 'lastname' => 'Smith']
-        ];
-        $params2 = [
-            'index' => 'test',
-            'id'    => '2',
-            'type'  => 'test_type',
-            'body'  => ['name' => 'Ed', 'lastname' => 'Temp']
+            'body'  => $data
         ];
 
-        $c = $GLOBALS['client'];
-        $response1 = $c->index($params1);
-        $response2 = $c->index($params2);
-
-        echo json_encode([$response1, $response2]);
+        $response = $GLOBALS['client']->index($entry);
+        echo json_encode($response);
     }
 
     function findDocuments($search) {
@@ -45,7 +29,7 @@
                 'query' => [
                     'query_string' => [
                         'query' => '*' . $search . '*',
-                        'fields' => ['name', 'lastname']
+                        'fields' => ['firstName', 'lastName', 'description']
                     ]
                 ]
             ]
@@ -59,8 +43,8 @@
     if($_SERVER['REQUEST_METHOD'] == "POST" and (isset($_POST['action'])))
     {
         switch ($_POST['action']){
-            case "seed":
-                addDocuments();
+            case "addDocument":
+                addDocument($_POST['data']);
                 break;
             case "search":
                 $searchPhrase = '';

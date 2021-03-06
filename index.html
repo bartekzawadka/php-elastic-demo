@@ -4,44 +4,113 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="vendor/twbs/bootstrap/dist/js/bootstrap.js"></script>
+    <link rel="stylesheet" href="vendor/twbs/bootstrap/dist/css/bootstrap.css">
 </head>
 <body>
-<div style="margin: 20px auto; width: 500px">
-    <button id="seed">Wrzuć dane</button>
-</div>
-<div style="margin: 20px auto; width: 500px">
-    <input id="searchPhrase" width="200"><button id="search">Szukaj</button>
-</div>
-<div style="margin: 20px auto; width: 500px">
-    <textarea readonly id="output" rows="50" style="width: 100%"></textarea>
-    <button onclick="$('#output').val('')">Wyczyść</button>
+<div class="container">
+    <div>
+        <h3>1. Dodaj wpisy</h3>
+        <div class="row">
+            <div class="form-group col-md-3">
+                <input type="text" id="pFirstName" class="form-control" placeholder="Imię">
+            </div>
+            <div class="form-group col-md-3">
+                <input type="text" id="pLastName" class="form-control" placeholder="Nazwisko">
+            </div>
+            <div class="form-group col-md-3">
+                <input type="text" id="pDescription" class="form-control" placeholder="Opis">
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-success" id="btnAddEntry">Dodaj</button>
+            </div>
+        </div>
+    </div>
+    <div>
+        <h3>2. Szukaj</h3>
+        <div class="row">
+            <div class="col-md-9">
+                <input type="text" class="form-control" id="searchPhrase" placeholder="Szukaj">
+            </div>
+            <div class="col-md-3">
+                <button class="btn btn-info" id="search">Szukaj</button>
+            </div>
+        </div>
+        <div style="margin-top: 16px">
+            <h6 class="text-secondary">Wyniki</h6>
+            <table class="table" id="searchResultsTable">
+                <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Imię</th>
+                    <th scope="col">Nazwisko</th>
+                    <th scope="col">Opis</th>
+                </tr>
+                </thead>
+                <tbody id="searchResultsTableBody">
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div>
+        <h3>RAW response</h3>
+        <div>
+            <textarea readonly class="form-control" id="output" rows="50" style="width: 100%"></textarea>
+        </div>
+    </div>
 </div>
 <script>
-    $('#seed').click(function (){
+    $('#btnAddEntry').click(function () {
         $.ajax({
             type: "POST",
             url: "index.php",
-            data: {'action': 'seed'}
-        }).done(function(msg){
-            $('#output').val(getJson(msg));
+            data: {
+                'action': 'addDocument',
+                'data': {
+                    'firstName': $('#pFirstName').val(),
+                    'lastName': $('#pLastName').val(),
+                    'description': $('#pDescription').val(),
+                }
+            }
+        }).done(function (msg) {
+            $('#pFirstName').val('');
+            $('#pLastName').val('');
+            $('#pDescription').val('');
+            handleBackendResult(msg);
         })
     });
 
-    $('#search').click(function (){
+    $('#search').click(function () {
         let val = $('#searchPhrase').val();
         $.ajax({
             type: "POST",
             url: "index.php",
             data: {'action': 'search', 'value': val}
-        }).done(function(msg){
-            console.log(msg);
-            $('#output').val(getJson(msg));
-        })
-    })
+        }).done(function (msg) {
+            let json = handleBackendResult(msg);
+            let searchResultsTableBody = $('#searchResultsTableBody');
+            searchResultsTableBody.html('');
+            let html = '';
+            for(let i=0;i<json.hits.hits.length;i++){
+                html += `<tr>
+                            <th scope="row">${i+1}</th>
+                            <td>${json.hits.hits[i]._source.firstName}</td>
+                            <td>${json.hits.hits[i]._source.lastName}</td>
+                            <td>${json.hits.hits[i]._source.description}</td>
+                        </tr>`;
+            }
 
-    function getJson(val){
+            searchResultsTableBody.html(html);
+        })
+    });
+
+    function handleBackendResult(val){
+        console.log(val);
         let obj = JSON.parse(val);
-        return JSON.stringify(obj, undefined, 4);
+        let json = JSON.stringify(obj, undefined, 4);
+        $('#output').val(json);
+
+        return obj;
     }
 </script>
 </body>
