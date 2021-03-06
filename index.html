@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+<div style="margin: 20px auto; width: 500px">
+    <button id="seed">Wrzuć dane</button>
+</div>
+<div style="margin: 20px auto; width: 500px">
+    <input id="searchPhrase" width="200"><button id="search">Szukaj</button>
+</div>
+<div style="margin: 20px auto; width: 500px">
+    <textarea readonly id="output" rows="50" style="width: 100%"></textarea>
+    <button onclick="$('#output').val('')">Wyczyść</button>
+</div>
+<script>
+    $('#seed').click(function (){
+        $.ajax({
+            type: "POST",
+            url: "index.php",
+            data: {'action': 'seed'}
+        }).done(function(msg){
+            $('#output').val(getJson(msg));
+        })
+    });
+
+    $('#search').click(function (){
+        let val = $('#searchPhrase').val();
+        $.ajax({
+            type: "POST",
+            url: "index.php",
+            data: {'action': 'search', 'value': val}
+        }).done(function(msg){
+            console.log(msg);
+            $('#output').val(getJson(msg));
+        })
+    })
+
+    function getJson(val){
+        let obj = JSON.parse(val);
+        return JSON.stringify(obj, undefined, 4);
+    }
+</script>
+</body>
+</html>

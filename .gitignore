@@ -1,3 +1,11 @@
+# Composer
+composer.phar
+/vendor/
+composer.lock
+
+# JetBrains
+.idea/
+
 # Logs
 logs
 *.log
