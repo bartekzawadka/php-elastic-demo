@@ -12,14 +12,17 @@
     <div>
         <h3>1. Dodaj wpisy</h3>
         <div class="row">
-            <div class="form-group col-md-3">
+            <div class="form-group col-md-2">
                 <input type="text" id="pFirstName" class="form-control" placeholder="Imię">
             </div>
-            <div class="form-group col-md-3">
+            <div class="form-group col-md-2">
                 <input type="text" id="pLastName" class="form-control" placeholder="Nazwisko">
             </div>
             <div class="form-group col-md-3">
                 <input type="text" id="pDescription" class="form-control" placeholder="Opis">
+            </div>
+            <div class="form-group col-md-2">
+                <input type="number" id="pHouseNumber" class="form-control" placeholder="Nr domu">
             </div>
             <div class="col-md-3">
                 <button class="btn btn-success" id="btnAddEntry">Dodaj</button>
@@ -29,11 +32,12 @@
     <div>
         <h3>2. Szukaj</h3>
         <div class="row">
-            <div class="col-md-9">
+            <div class="col-md-6">
                 <input type="text" class="form-control" id="searchPhrase" placeholder="Szukaj">
             </div>
-            <div class="col-md-3">
-                <button class="btn btn-info" id="search">Szukaj</button>
+            <div class="btn-group col-md-6" role="group">
+                <button type="button" class="btn btn-info" id="searchAny">Szukaj (*)</button>
+                <button type="button" class="btn btn-info" id="searchFuzzy">Szukaj opisie (fuzzy)</button>
             </div>
         </div>
         <div style="margin-top: 16px">
@@ -45,6 +49,7 @@
                     <th scope="col">Imię</th>
                     <th scope="col">Nazwisko</th>
                     <th scope="col">Opis</th>
+                    <th scope="col">Nr domu</th>
                 </tr>
                 </thead>
                 <tbody id="searchResultsTableBody">
@@ -52,10 +57,21 @@
             </table>
         </div>
     </div>
-    <div>
-        <h3>RAW response</h3>
-        <div>
-            <textarea readonly class="form-control" id="output" rows="50" style="width: 100%"></textarea>
+    <div id="accordion">
+        <div class="card">
+            <div class="card-header" id="headingOne">
+                <h5 class="mb-0">
+                    <button class="btn btn-link" data-toggle="collapse" data-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                        Odpowiedź (RAW)
+                    </button>
+                </h5>
+            </div>
+
+            <div id="collapseOne" class="collapse" aria-labelledby="headingOne" data-parent="#accordion">
+                <div class="card-body">
+                    <textarea readonly class="form-control" id="output" rows="25" style="width: 100%; overflow-y: scroll"></textarea>
+                </div>
+            </div>
         </div>
     </div>
 </div>
@@ -70,6 +86,7 @@
                     'firstName': $('#pFirstName').val(),
                     'lastName': $('#pLastName').val(),
                     'description': $('#pDescription').val(),
+                    'houseNo': $('#pHouseNumber').val()
                 }
             }
         }).done(function (msg) {
@@ -80,29 +97,41 @@
         })
     });
 
-    $('#search').click(function () {
+    $('#searchAny').click(function () {
         let val = $('#searchPhrase').val();
         $.ajax({
             type: "POST",
             url: "index.php",
             data: {'action': 'search', 'value': val}
-        }).done(function (msg) {
-            let json = handleBackendResult(msg);
-            let searchResultsTableBody = $('#searchResultsTableBody');
-            searchResultsTableBody.html('');
-            let html = '';
-            for(let i=0;i<json.hits.hits.length;i++){
-                html += `<tr>
+        }).done(displayResults)
+    });
+
+    $('#searchFuzzy').click(function () {
+        let val = $('#searchPhrase').val();
+        $.ajax({
+            type: "POST",
+            url: "index.php",
+            data: {'action': 'searchFuzzy', 'value': val}
+        }).done(displayResults)
+    });
+
+    function displayResults(msg) {
+        let json = handleBackendResult(msg);
+        let searchResultsTableBody = $('#searchResultsTableBody');
+        searchResultsTableBody.html('');
+        let html = '';
+        for(let i=0;i<json.hits.hits.length;i++){
+            html += `<tr>
                             <th scope="row">${i+1}</th>
                             <td>${json.hits.hits[i]._source.firstName}</td>
                             <td>${json.hits.hits[i]._source.lastName}</td>
                             <td>${json.hits.hits[i]._source.description}</td>
+                            <td>${json.hits.hits[i]._source.houseNo}</td>
                         </tr>`;
-            }
+        }
 
-            searchResultsTableBody.html(html);
-        })
-    });
+        searchResultsTableBody.html(html);
+    }
 
     function handleBackendResult(val){
         console.log(val);
