@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  elasticsearch:
+    image: elasticsearch:5.6.13
+    container_name: elasticsearch
+    environment:
+      - cluster.name=docker-cluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms1G -Xmx1G"
+      - discovery.type=single-node
+    ports: 
+      - 9200:9200
+      - 9300:9300
+
+  demo:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+    container_name: php-elasticsearch-demo
+    ports:
+      - 8888:80
+    environment: 
+      - ELASTIC_ENDPOINT=http://elasticsearch:9200

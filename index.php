@@ -3,9 +3,11 @@
 use Elasticsearch\ClientBuilder;
 
 require 'vendor/autoload.php';
-$hosts = [
-    'http://bz-elastic.westeurope.azurecontainer.io:9200'
-];
+$hosts = [];
+$hosts = isset($_ENV['ELASTIC_ENDPOINT'])
+    ? [$_ENV['ELASTIC_ENDPOINT']]
+    : ['http://bz-elastic.westeurope.azurecontainer.io:9200'];
+
 $client = ClientBuilder::create()
     ->setHosts($hosts)
     ->build();
@@ -31,7 +33,7 @@ function findDocuments($search)
             'query' => [
                 'query_string' => [
                     'query' => '*' . $search . '*',
-                    'fields' => ['firstName', 'lastName', 'description']
+                    'fields' => ['firstName', 'lastName', 'description', 'houseNo']
                 ]
             ]
         ]
